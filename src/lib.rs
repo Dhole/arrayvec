@@ -49,6 +49,9 @@ use crate::maybe_uninit::MaybeUninit;
 #[cfg(feature="serde")]
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
+#[cfg(feature = "as-slice")]
+use as_slice::{AsMutSlice, AsSlice};
+
 mod array;
 mod array_string;
 mod char;
@@ -639,11 +642,13 @@ impl<A: Array> ArrayVec<A> {
     }
 
     /// Return a slice containing all elements of the vector.
+    #[cfg(not(feature = "as-slice"))]
     pub fn as_slice(&self) -> &[A::Item] {
         self
     }
 
     /// Return a mutable slice containing all elements of the vector.
+    #[cfg(not(feature = "as-slice"))]
     pub fn as_mut_slice(&mut self) -> &mut [A::Item] {
         self
     }
@@ -676,6 +681,25 @@ impl<A: Array> DerefMut for ArrayVec<A> {
         unsafe {
             slice::from_raw_parts_mut(self.xs.ptr_mut(), len)
         }
+    }
+}
+
+#[cfg(feature = "as-slice")]
+/// Requires crate feature `"as-slice"`
+impl<A: Array> AsSlice for ArrayVec<A> {
+    type Element = A::Item;
+    /// Return a slice containing all elements of the vector.
+    fn as_slice(&self) -> &[A::Item] {
+        self
+    }
+}
+
+#[cfg(feature = "as-slice")]
+/// Requires crate feature `"as-slice"`
+impl<A: Array> AsMutSlice for ArrayVec<A> {
+    /// Return a mutable slice containing all elements of the vector.
+    fn as_mut_slice(&mut self) -> &mut [A::Item] {
+        self
     }
 }
 
